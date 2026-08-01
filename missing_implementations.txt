@@ -1,17 +1,12 @@
-operator=
 writeString
 readString
 DEBUG_Enable
 CPU_Core_KVM_Run
 CPU_Core_KVM_Trap_Run
-operator bool
-operator Hex
-operator int
-operator double
 GetPropValue
 GetValues
-operator
 GFX_GetBestMode
+DOS_Drive_Cache::MediaChange
 VGA_IsCaptureEnabled
 VGA_UpdateCapturePending
 VGA_CaptureHasNextFrame

@@ -1,4 +1,5 @@
 BReverbModel.cpp
+ScalingEffect.h
 adlib.cpp
 bios.cpp
 callback.cpp
@@ -34,7 +35,6 @@ dos_programs.cpp
 dos_tables.cpp
 dosbox.cpp
 drive_cache.cpp
-drive_iso.cpp
 drive_local.cpp
 drive_virtual.cpp
 drives.cpp
@@ -42,6 +42,8 @@ ems.cpp
 flags.cpp
 floppy.cpp
 fpu.cpp
+gtest.h
+gui_tk.h
 gus.cpp
 hardware.cpp
 ide.cpp
@@ -71,6 +73,7 @@ mixer.cpp
 mkdir_p.cpp
 mouse.cpp
 mpu401.cpp
+opl.cpp
 paging.cpp
 parport.cpp
 pci_bus.cpp
@@ -80,6 +83,7 @@ printer.cpp
 programs.cpp
 ps1_sound.cpp
 render.cpp
+risc_x64.h
 savestates.cpp
 sblaster.cpp
 sdl_gui.cpp
