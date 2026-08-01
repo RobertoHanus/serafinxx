@@ -43,7 +43,6 @@ flags.cpp
 floppy.cpp
 fpu.cpp
 gtest.h
-gui_tk.h
 gus.cpp
 hardware.cpp
 ide.cpp

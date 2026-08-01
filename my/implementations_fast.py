@@ -3,7 +3,7 @@ import re
 
 
 # =========================================================
-# Precompiled regular expressions
+# Regular expressions
 # =========================================================
 
 _RE_SPACE_CLOSE = re.compile(r'\s+\)')
@@ -21,145 +21,71 @@ _RE_FINAL_IDENTIFIER = re.compile(
     r'^(.*\S)\s+([A-Za-z_]\w*)$'
 )
 
-_RE_FUNCTION_POINTER = re.compile(
-    r'\(\s*\*\s*[A-Za-z_]\w*\s*\)'
-)
-
-_RE_FUNCTION_REFERENCE = re.compile(
-    r'\(\s*&\s*[A-Za-z_]\w*\s*\)'
-)
-
-_RE_IDENTIFIER_END = re.compile(
-    r'([A-Za-z_]\w*)$'
-)
-
-_RE_ASSIGNMENT = re.compile(
-    r'(?<![=!<>])=(?!=)'
-)
-
-_RE_ASSIGNMENT_NAME = re.compile(
-    r'\b[A-Za-z_]\w*\s*=\s*'
-)
-
-_RE_RETURN_THROW = re.compile(
-    r'\b(?:return|throw|case)\b'
-)
-
-_RE_ARITHMETIC = re.compile(
-    r'(?<!:)[+\-/%!|^](?!>)'
+_RE_FUNCTION_POINTER_NAME = re.compile(
+    r'\(\s*[*&]\s*([A-Za-z_]\w*)\s*\)'
 )
 
 _RE_CONTROL = re.compile(
     r'^\s*(?:if|else|for|while|switch|catch|do)\b'
 )
 
-_RE_DECL_QUALIFIERS = re.compile(
-    r'\b(?:virtual|static|inline|extern|constexpr|consteval|friend|'
-    r'explicit|mutable|register|const|volatile|typename)\b'
+_RE_RETURN_THROW = re.compile(
+    r'\b(?:return|throw|case)\b'
 )
 
-_RE_NESTED_CALL = re.compile(
-    r'\([^()]*\)'
-)
-
-_RE_FUNCTION_POINTER_NAME = re.compile(
-    r'\(\s*[*&]\s*([A-Za-z_]\w*)\s*\)'
-)
-
-_RE_WHILE_AFTER_BRACE = re.compile(
-    r'^\}\s*while\s*\([^)]*\)\s*'
-)
-
-_RE_UPPERCASE_MACRO = re.compile(
-    r'^[A-Z_][A-Z0-9_]*\s*\([^)]*\)\s*$'
+_RE_ASSIGNMENT = re.compile(
+    r'(?<![=!<>])=(?!=)'
 )
 
 _RE_ASSIGNMENT_OPERATOR = re.compile(
     r'\boperator\s*='
 )
 
-_RE_FUNCTION_CALL_NAME = re.compile(
-    r'[A-Za-z_]\w*\s*$'
+_RE_UPPERCASE_MACRO = re.compile(
+    r'^[A-Z_][A-Z0-9_]*\s*\([^)]*\)\s*$'
 )
 
-# ---------------------------------------------------------
-# C++ operator names
-#
-# Important:
-#
-# operator bool
-# operator Hex
-# operator int
-# operator double
-#
-# are conversion operators and must be accepted.
-# ---------------------------------------------------------
-
-_RE_OPERATOR_NAME = re.compile(
-    r'((?:[A-Za-z_]\w*::)*'
-    r'operator\s*'
-    r'(?:'
-        r'new(?:\[\])?'
-        r'|delete(?:\[\])?'
-        r'|<<=?'
-        r'|>>=?'
-        r'|=='
-        r'|!='
-        r'|<='
-        r'|>='
-        r'|\+\+'
-        r'|--'
-        r'|&&'
-        r'|\|\|'
-        r'|->\*'
-        r'|->'
-        r'|\+'
-        r'|-'
-        r'|\*'
-        r'|/'
-        r'|%'
-        r'|&'
-        r'|\|'
-        r'|\^'
-        r'|~'
-        r'|!'
-        r'|='
-        r'|<'
-        r'|>'
-        r'|\(\)'
-        r'|\[\]'
-        r'|[A-Za-z_]\w*'
-    r'))$'
-)
-
-_RE_DESTRUCTOR_NAME = re.compile(
-    r'((?:[A-Za-z_]\w*::)*~[A-Za-z_]\w*)$'
-)
-
-_RE_NORMAL_FUNCTION_NAME = re.compile(
-    r'((?:[A-Za-z_]\w*::)*[A-Za-z_]\w*)$'
-)
-
-# ---------------------------------------------------------
-# Types
-# ---------------------------------------------------------
-
-_RE_TYPE = re.compile(
-    r'^(?:(?:const\s+|volatile\s+|unsigned\s+|signed\s+|'
-    r'long\s+|short\s+)*'
+_RE_IDENTIFIER = re.compile(
     r'[A-Za-z_]\w*'
-    r'(?:\s*::\s*[A-Za-z_]\w*)*'
-    r'(?:\s*<[^;{}()]*>)?'
-    r'(?:\s*[\*&]+)?)$'
 )
 
-# ---------------------------------------------------------
-# Qualified function name
-# ---------------------------------------------------------
+_RE_QUALIFIED_IDENTIFIER = re.compile(
+    r'[A-Za-z_]\w*(?:\s*::\s*[A-Za-z_]\w*)*'
+)
 
-_RE_QUALIFIED_NAME = re.compile(
-    r'(?:[A-Za-z_]\w*::)+'
-    r'~?[A-Za-z_]\w*$'
+_RE_OPERATOR_TARGET = re.compile(
+    r'(?:'
+    r'new(?:\[\])?'
+    r'|delete(?:\[\])?'
+    r'|<<=?'
+    r'|>>=?'
+    r'|=='
+    r'|!='
+    r'|<='
+    r'>='
+    r'|\+\+'
+    r'|--'
+    r'|&&'
+    r'|\|\|'
+    r'|->\*'
+    r'|->'
+    r'|\+'
+    r'-'
+    r'\*'
+    r'/'
+    r'%'
+    r'&'
+    r'\|'
+    r'\^'
+    r'~'
+    r'!'
+    r'='
+    r'<'
+    r'>'
+    r'|\(\)'
+    r'|\[\]'
+    r'|[A-Za-z_]\w*'
+    r')'
 )
 
 
@@ -171,12 +97,35 @@ def clean_spaces(text):
 
     text = " ".join(text.split())
 
-    text = _RE_SPACE_CLOSE.sub(")", text)
-    text = _RE_OPEN_SPACE.sub("(", text)
-    text = _RE_COMMA_SPACE.sub(", ", text)
-    text = _RE_SCOPE_SPACE.sub("::", text)
-    text = _RE_AMP_SPACE.sub(" &", text)
-    text = _RE_STAR_SPACE.sub(" *", text)
+    text = _RE_SPACE_CLOSE.sub(
+        ")",
+        text
+    )
+
+    text = _RE_OPEN_SPACE.sub(
+        "(",
+        text
+    )
+
+    text = _RE_COMMA_SPACE.sub(
+        ", ",
+        text
+    )
+
+    text = _RE_SCOPE_SPACE.sub(
+        "::",
+        text
+    )
+
+    text = _RE_AMP_SPACE.sub(
+        " &",
+        text
+    )
+
+    text = _RE_STAR_SPACE.sub(
+        " *",
+        text
+    )
 
     return text.strip()
 
@@ -198,11 +147,13 @@ def remove_comments(text):
 
         ch = text[i]
 
+        # -------------------------------------------------
+        # Normal
+        # -------------------------------------------------
+
         if state == "normal":
 
-            # -------------------------------------------------
             # Line comment
-            # -------------------------------------------------
 
             if (
                 ch == "/"
@@ -219,9 +170,7 @@ def remove_comments(text):
 
                 continue
 
-            # -------------------------------------------------
             # Block comment
-            # -------------------------------------------------
 
             if (
                 ch == "/"
@@ -250,38 +199,39 @@ def remove_comments(text):
 
                 continue
 
-            # -------------------------------------------------
             # String
-            # -------------------------------------------------
 
             if ch == '"':
 
                 state = "string"
+
                 result.append(ch)
+
                 i += 1
 
                 continue
 
-            # -------------------------------------------------
             # Character
-            # -------------------------------------------------
 
             if ch == "'":
 
                 state = "char"
+
                 result.append(ch)
+
                 i += 1
 
                 continue
 
             result.append(ch)
+
             i += 1
 
             continue
 
-        # =====================================================
+        # -------------------------------------------------
         # String
-        # =====================================================
+        # -------------------------------------------------
 
         if state == "string":
 
@@ -291,20 +241,25 @@ def remove_comments(text):
 
                 if i + 1 < length:
 
-                    result.append(text[i + 1])
+                    result.append(
+                        text[i + 1]
+                    )
+
                     i += 2
 
                     continue
 
             if ch == '"':
+
                 state = "normal"
 
             i += 1
+
             continue
 
-        # =====================================================
+        # -------------------------------------------------
         # Character
-        # =====================================================
+        # -------------------------------------------------
 
         if state == "char":
 
@@ -314,27 +269,33 @@ def remove_comments(text):
 
                 if i + 1 < length:
 
-                    result.append(text[i + 1])
+                    result.append(
+                        text[i + 1]
+                    )
+
                     i += 2
 
                     continue
 
             if ch == "'":
+
                 state = "normal"
 
             i += 1
+
             continue
 
     return "".join(result)
 
 
 # =========================================================
-# Split C++ parameter list
+# Split parameters
 # =========================================================
 
 def split_parameters(parameters):
 
     result = []
+
     current = []
 
     paren_depth = 0
@@ -353,56 +314,41 @@ def split_parameters(parameters):
 
             paren_depth += 1
             current.append(ch)
-            i += 1
-            continue
 
-        if ch == ")":
+        elif ch == ")":
 
             if paren_depth > 0:
                 paren_depth -= 1
 
             current.append(ch)
-            i += 1
-            continue
 
-        if ch == "[":
+        elif ch == "[":
 
             bracket_depth += 1
             current.append(ch)
-            i += 1
-            continue
 
-        if ch == "]":
+        elif ch == "]":
 
             if bracket_depth > 0:
                 bracket_depth -= 1
 
             current.append(ch)
-            i += 1
-            continue
 
-        if ch == "{":
+        elif ch == "{":
 
             brace_depth += 1
             current.append(ch)
-            i += 1
-            continue
 
-        if ch == "}":
+        elif ch == "}":
 
             if brace_depth > 0:
                 brace_depth -= 1
 
             current.append(ch)
-            i += 1
-            continue
 
-        # -----------------------------------------------------
-        # Template angle brackets
-        # -----------------------------------------------------
+        elif ch == "<":
 
-        if ch == "<":
-
+            # Reasonable template detection.
             prev = parameters[i - 1] if i > 0 else ""
             nxt = parameters[i + 1] if i + 1 < length else ""
 
@@ -416,23 +362,15 @@ def split_parameters(parameters):
                 angle_depth += 1
 
             current.append(ch)
-            i += 1
-            continue
 
-        if ch == ">":
+        elif ch == ">":
 
             if angle_depth > 0:
                 angle_depth -= 1
 
             current.append(ch)
-            i += 1
-            continue
 
-        # -----------------------------------------------------
-        # Parameter separator
-        # -----------------------------------------------------
-
-        if (
+        elif (
             ch == ","
             and paren_depth == 0
             and bracket_depth == 0
@@ -447,10 +385,10 @@ def split_parameters(parameters):
 
             current = []
 
-            i += 1
-            continue
+        else:
 
-        current.append(ch)
+            current.append(ch)
+
         i += 1
 
     param = "".join(current).strip()
@@ -480,6 +418,7 @@ def remove_default_value(param):
         ch = param[i]
 
         if ch == "(":
+
             paren_depth += 1
 
         elif ch == ")":
@@ -488,6 +427,7 @@ def remove_default_value(param):
                 paren_depth -= 1
 
         elif ch == "[":
+
             bracket_depth += 1
 
         elif ch == "]":
@@ -496,6 +436,7 @@ def remove_default_value(param):
                 bracket_depth -= 1
 
         elif ch == "{":
+
             brace_depth += 1
 
         elif ch == "}":
@@ -504,6 +445,7 @@ def remove_default_value(param):
                 brace_depth -= 1
 
         elif ch == "<":
+
             angle_depth += 1
 
         elif ch == ">":
@@ -527,13 +469,14 @@ def remove_default_value(param):
 
 
 # =========================================================
-# Remove parameter variable name
+# Remove parameter name
 # =========================================================
 
 def remove_parameter_name(param):
 
-    param = remove_default_value(param)
-    param = param.strip()
+    param = remove_default_value(
+        param
+    ).strip()
 
     if not param:
         return ""
@@ -542,24 +485,16 @@ def remove_parameter_name(param):
         return "..."
 
     # -----------------------------------------------------
-    # Function pointer
+    # Function pointer/reference
     # -----------------------------------------------------
 
-    m = _RE_FUNCTION_POINTER_NAME.search(param)
-
-    if m:
-
-        param = _RE_FUNCTION_POINTER.sub(
-            "(*)",
-            param
-        )
-
-    # -----------------------------------------------------
-    # Function reference
-    # -----------------------------------------------------
-
-    param = _RE_FUNCTION_REFERENCE.sub(
-        "(&)",
+    param = re.sub(
+        r'\(\s*[*&]\s*[A-Za-z_]\w*\s*\)',
+        lambda m: (
+            "(*)"
+            if "*" in m.group(0)
+            else "(&)"
+        ),
         param
     )
 
@@ -578,6 +513,11 @@ def remove_parameter_name(param):
         )
 
     else:
+
+        # -------------------------------------------------
+        # Remove final identifier if it looks like a
+        # parameter name.
+        # -------------------------------------------------
 
         m = _RE_FINAL_IDENTIFIER.match(param)
 
@@ -610,10 +550,11 @@ def remove_parameter_name(param):
             }
 
             if name not in keywords:
+
                 param = before
 
     # -----------------------------------------------------
-    # Normalize pointer/reference spacing
+    # Normalize pointers/references
     # -----------------------------------------------------
 
     param = re.sub(
@@ -647,9 +588,13 @@ def remove_parameter_names(parameters):
 
     result = []
 
-    for param in split_parameters(parameters):
+    for param in split_parameters(
+        parameters
+    ):
 
-        param = remove_parameter_name(param)
+        param = remove_parameter_name(
+            param
+        )
 
         if param:
             result.append(param)
@@ -689,14 +634,15 @@ def find_matching_paren(text, opening):
 
 
 # =========================================================
-# Extract function parameter section
+# Find function parameter range
 # =========================================================
 
-def find_function_parameter_range(declaration):
+def find_function_parameter_range(
+    declaration
+):
 
     candidates = []
 
-    paren_depth = 0
     bracket_depth = 0
     angle_depth = 0
 
@@ -727,16 +673,18 @@ def find_function_parameter_range(declaration):
 
         elif ch == "(":
 
-            if bracket_depth == 0 and angle_depth == 0:
+            if (
+                bracket_depth == 0
+                and angle_depth == 0
+            ):
+
                 candidates.append(i)
 
         i += 1
 
     # -----------------------------------------------------
-    # Prefer the last candidate.
-    #
-    # This is important for declarations containing
-    # templates or nested constructs.
+    # The function parameter list is normally the last
+    # valid parenthesis pair in the declaration.
     # -----------------------------------------------------
 
     for start in reversed(candidates):
@@ -749,20 +697,16 @@ def find_function_parameter_range(declaration):
         if end < 0:
             continue
 
-        prefix = declaration[:start].strip()
+        prefix = declaration[
+            :start
+        ].strip()
 
         if not prefix:
             continue
 
-        # -------------------------------------------------
-        # Do not accept an arbitrary expression such as:
-        #
-        # foo(bar)
-        #
-        # unless it looks like a function declaration.
-        # -------------------------------------------------
-
-        if _RE_CONTROL.match(prefix):
+        if _RE_CONTROL.match(
+            prefix
+        ):
             continue
 
         return start, end
@@ -771,19 +715,439 @@ def find_function_parameter_range(declaration):
 
 
 # =========================================================
-# Normalize function declaration
+# Extract the actual function name
 # =========================================================
 
-def normalize_function(declaration):
+def extract_name_from_prefix(prefix):
 
-    declaration = clean_spaces(declaration)
+    prefix = clean_spaces(
+        prefix
+    )
+
+    if not prefix:
+        return None
+
+    # =====================================================
+    # OPERATOR
+    #
+    # Examples:
+    #
+    # Value::operator bool
+    # Value::operator Hex
+    # Value::operator int
+    # Value::operator double
+    # Value::operator=
+    # operator==
+    # =====================================================
+
+    operator_pos = prefix.rfind(
+        "operator"
+    )
+
+    if operator_pos >= 0:
+
+        # Make sure "operator" is an identifier
+        # and not part of another word.
+
+        before_char = (
+            prefix[operator_pos - 1]
+            if operator_pos > 0
+            else ""
+        )
+
+        after_pos = (
+            operator_pos + len("operator")
+        )
+
+        after_char = (
+            prefix[after_pos]
+            if after_pos < len(prefix)
+            else ""
+        )
+
+        valid_before = (
+            not before_char
+            or not (
+                before_char.isalnum()
+                or before_char == "_"
+            )
+        )
+
+        valid_after = (
+            not after_char
+            or not (
+                after_char.isalnum()
+                or after_char == "_"
+            )
+        )
+
+        if valid_before and valid_after:
+
+            scope = prefix[
+                :operator_pos
+            ].strip()
+
+            # -------------------------------------------------
+            # Remove return type from scope.
+            #
+            # Example:
+            #
+            # bool Value::operator bool
+            #
+            # becomes:
+            #
+            # Value::
+            # -------------------------------------------------
+
+            scope_match = re.search(
+                r'('
+                r'(?:[A-Za-z_]\w*::)+'
+                r')$',
+                scope
+            )
+
+            if scope_match:
+
+                scope = scope_match.group(1)
+
+            else:
+
+                scope = ""
+
+            target = prefix[
+                after_pos:
+            ].strip()
+
+            if not target:
+
+                return (
+                    scope
+                    + "operator"
+                )
+
+            return (
+                scope
+                + "operator "
+                + target
+            ).strip()
+
+    # =====================================================
+    # Destructor
+    #
+    # Foo::~Foo
+    # =====================================================
+
+    destructor = re.search(
+        r'((?:[A-Za-z_]\w*::)*'
+        r'~[A-Za-z_]\w*)$',
+        prefix
+    )
+
+    if destructor:
+
+        return destructor.group(1)
+
+    # =====================================================
+    # Normal function
+    #
+    # We deliberately take the LAST qualified identifier.
+    #
+    # Example:
+    #
+    #   const std::vector<Value>& Property::GetValues
+    #
+    # -> Property::GetValues
+    # =====================================================
+
+    matches = list(
+        re.finditer(
+            r'[A-Za-z_]\w*'
+            r'(?:\s*::\s*[A-Za-z_]\w*)*',
+            prefix
+        )
+    )
+
+    if not matches:
+        return None
+
+    candidate = matches[-1].group(0)
+
+    candidate = clean_spaces(
+        candidate
+    )
+
+    return candidate
+
+
+# =========================================================
+# Get function name
+# =========================================================
+
+def get_function_name(declaration):
+
+    if not declaration:
+        return None
+
+    declaration = clean_spaces(
+        declaration
+    )
+
+    start, end = find_function_parameter_range(
+        declaration
+    )
+
+    if start < 0:
+        return None
+
+    prefix = declaration[
+        :start
+    ].strip()
+
+    if not prefix:
+        return None
+
+    return extract_name_from_prefix(
+        prefix
+    )
+
+
+# =========================================================
+# Determine whether declaration is a function
+# =========================================================
+
+def looks_like_function(
+    declaration
+):
+
+    if not declaration:
+        return False
+
+    declaration = clean_spaces(
+        declaration
+    )
+
+    if "(" not in declaration:
+        return False
+
+    if ")" not in declaration:
+        return False
+
+    start, end = find_function_parameter_range(
+        declaration
+    )
+
+    if start < 0 or end < 0:
+        return False
+
+    prefix = declaration[
+        :start
+    ].strip()
+
+    if not prefix:
+        return False
+
+    # -----------------------------------------------------
+    # Control structures
+    # -----------------------------------------------------
+
+    if _RE_CONTROL.match(
+        prefix
+    ):
+        return False
+
+    # -----------------------------------------------------
+    # return/throw/case
+    # -----------------------------------------------------
+
+    if _RE_RETURN_THROW.search(
+        prefix
+    ):
+        return False
+
+    # -----------------------------------------------------
+    # Lambda
+    # -----------------------------------------------------
+
+    if declaration.startswith("["):
+        return False
+
+    # -----------------------------------------------------
+    # Assignment expressions.
+    #
+    # operator= is explicitly allowed.
+    # -----------------------------------------------------
+
+    if _RE_ASSIGNMENT.search(
+        prefix
+    ):
+
+        if not _RE_ASSIGNMENT_OPERATOR.search(
+            prefix
+        ):
+
+            return False
+
+    # -----------------------------------------------------
+    # Macro invocation
+    # -----------------------------------------------------
+
+    if _RE_UPPERCASE_MACRO.fullmatch(
+        declaration
+    ):
+
+        return False
+
+    # -----------------------------------------------------
+    # Function name
+    # -----------------------------------------------------
+
+    name = get_function_name(
+        declaration
+    )
+
+    if not name:
+        return False
+
+    # -----------------------------------------------------
+    # Operators
+    # -----------------------------------------------------
+
+    if "operator" in name:
+
+        return True
+
+    # -----------------------------------------------------
+    # Qualified member function
+    # -----------------------------------------------------
+
+    if "::" in name:
+
+        return True
+
+    # -----------------------------------------------------
+    # Normal function.
+    #
+    # We need something before the final function name
+    # that looks like a return type.
+    # -----------------------------------------------------
+
+    name_match = re.search(
+        r'([A-Za-z_]\w*)$',
+        name
+    )
+
+    if not name_match:
+        return False
+
+    function_name = name_match.group(1)
+
+    # -----------------------------------------------------
+    # Locate the function name at the end of prefix.
+    # -----------------------------------------------------
+
+    function_match = re.search(
+        r'([A-Za-z_]\w*)\s*$',
+        prefix
+    )
+
+    if not function_match:
+        return False
+
+    before_name = prefix[
+        :function_match.start()
+    ].strip()
+
+    if not before_name:
+
+        # This can be a constructor/function with no
+        # explicit return type only if qualified.
+        return "::" in name
+
+    # -----------------------------------------------------
+    # Reject obvious expressions.
+    # -----------------------------------------------------
+
+    if re.search(
+        r'[=+\-/!|^.]',
+        before_name
+    ):
+
+        return False
+
+    if "[" in before_name:
+        return False
+
+    if "]" in before_name:
+        return False
+
+    return_type = before_name
+
+    # -----------------------------------------------------
+    # Remove pointer/reference qualifiers.
+    # -----------------------------------------------------
+
+    test_type = re.sub(
+        r'[\*&]',
+        " ",
+        return_type
+    )
+
+    test_type = clean_spaces(
+        test_type
+    )
+
+    if not test_type:
+        return False
+
+    # -----------------------------------------------------
+    # A return type should contain identifiers, scope,
+    # templates and common type qualifiers.
+    #
+    # This is intentionally permissive.
+    # -----------------------------------------------------
+
+    if not re.fullmatch(
+        r'(?:'
+        r'const\s+|volatile\s+|'
+        r'unsigned\s+|signed\s+|'
+        r'long\s+|short\s+|'
+        r'class\s+|struct\s+|enum\s+|'
+        r'typename\s+|'
+        r')*'
+        r'[A-Za-z_]\w*'
+        r'(?:\s*::\s*[A-Za-z_]\w*)*'
+        r'(?:\s*<[^{}();]*>)?',
+        test_type
+    ):
+
+        return False
+
+    return True
+
+
+# =========================================================
+# Normalize complete function declaration
+# =========================================================
+
+def normalize_function(
+    declaration
+):
+
+    declaration = clean_spaces(
+        declaration
+    )
 
     declaration = declaration.rstrip()
 
     if declaration.endswith("{"):
-        declaration = declaration[:-1].strip()
 
-    declaration = declaration.rstrip(";").strip()
+        declaration = declaration[
+            :-1
+        ].strip()
+
+    declaration = declaration.rstrip(
+        ";"
+    ).strip()
 
     if not declaration:
         return None
@@ -795,7 +1159,9 @@ def normalize_function(declaration):
     if start < 0 or end < 0:
         return None
 
-    before = declaration[:start].strip()
+    before = declaration[
+        :start
+    ].strip()
 
     parameters = declaration[
         start + 1:end
@@ -809,355 +1175,22 @@ def normalize_function(declaration):
         parameters
     )
 
-    suffix = ""
-
-    if after:
-        suffix = " " + after
-
     result = (
         before
         + "("
         + parameters
         + ")"
-        + suffix
-        + ";"
     )
 
-    return clean_spaces(result)
+    if after:
 
+        result += " " + after
 
-# =========================================================
-# Extract function name
-# =========================================================
+    result += ";"
 
-def get_function_name(declaration):
-
-    if not declaration:
-        return None
-
-    declaration = clean_spaces(declaration)
-
-    start, end = find_function_parameter_range(
-        declaration
+    return clean_spaces(
+        result
     )
-
-    if start < 0:
-        return None
-
-    prefix = declaration[:start].strip()
-
-    if not prefix:
-        return None
-
-    # -----------------------------------------------------
-    # Assignment expressions are not declarations.
-    #
-    # Exception: operator=
-    # -----------------------------------------------------
-
-    if _RE_ASSIGNMENT.search(prefix):
-
-        if not _RE_ASSIGNMENT_OPERATOR.search(prefix):
-            return None
-
-    # -----------------------------------------------------
-    # Conversion / overloaded operators
-    # -----------------------------------------------------
-
-    m = _RE_OPERATOR_NAME.search(prefix)
-
-    if m:
-        return m.group(1)
-
-    # -----------------------------------------------------
-    # Destructor
-    # -----------------------------------------------------
-
-    m = _RE_DESTRUCTOR_NAME.search(prefix)
-
-    if m:
-        return m.group(1)
-
-    # -----------------------------------------------------
-    # Normal / qualified function
-    # -----------------------------------------------------
-
-    m = _RE_NORMAL_FUNCTION_NAME.search(prefix)
-
-    if m:
-        return m.group(1)
-
-    return None
-
-
-# =========================================================
-# Determine whether declaration is a function
-# =========================================================
-
-def looks_like_function(declaration):
-
-    if not declaration:
-        return False
-
-    declaration = declaration.strip()
-
-    if not declaration:
-        return False
-
-    if "(" not in declaration:
-        return False
-
-    if ")" not in declaration:
-        return False
-
-    declaration = clean_spaces(declaration)
-
-    start, end = find_function_parameter_range(
-        declaration
-    )
-
-    if start < 0 or end < 0:
-        return False
-
-    prefix = declaration[:start].strip()
-
-    if not prefix:
-        return False
-
-    # =====================================================
-    # Reject control structures
-    # =====================================================
-
-    if _RE_CONTROL.match(prefix):
-        return False
-
-    # =====================================================
-    # Reject return / throw / case expressions
-    # =====================================================
-
-    if _RE_RETURN_THROW.search(prefix):
-        return False
-
-    # =====================================================
-    # Lambda
-    # =====================================================
-
-    if declaration.startswith("["):
-        return False
-
-    # =====================================================
-    # Assignment expressions
-    # =====================================================
-
-    if _RE_ASSIGNMENT.search(prefix):
-
-        if not _RE_ASSIGNMENT_OPERATOR.search(prefix):
-            return False
-
-    # =====================================================
-    # Operator overloads
-    # =====================================================
-
-    if "operator" in prefix:
-
-        # Conversion operators:
-        #
-        #   Value::operator bool()
-        #   Value::operator Hex()
-        #   Value::operator int()
-        #   Value::operator double()
-        #
-        # and ordinary operators are all valid.
-        #
-        return bool(
-            _RE_OPERATOR_NAME.search(prefix)
-        )
-
-    # =====================================================
-    # Arithmetic expression rejection
-    # =====================================================
-
-    if _RE_ARITHMETIC.search(prefix):
-
-        return False
-
-    # =====================================================
-    # Remove declaration qualifiers
-    # =====================================================
-
-    test_prefix = _RE_DECL_QUALIFIERS.sub(
-        " ",
-        prefix
-    )
-
-    test_prefix = clean_spaces(
-        test_prefix
-    )
-
-    if not test_prefix:
-        return False
-
-    # =====================================================
-    # Extract function name
-    # =====================================================
-
-    name = get_function_name(
-        declaration
-    )
-
-    if not name:
-        return False
-
-    # =====================================================
-    # Qualified/member function
-    #
-    # Examples:
-    #
-    #   DOS_File::operator=
-    #   Value::operator bool
-    #   Foo::Bar
-    #   Foo::~Foo
-    # =====================================================
-
-    if "::" in name:
-
-        if _RE_QUALIFIED_NAME.fullmatch(name):
-
-            return True
-
-    # =====================================================
-    # Explicit operator
-    # =====================================================
-
-    if name.startswith("operator"):
-
-        return True
-
-    # =====================================================
-    # Locate final identifier
-    # =====================================================
-
-    name_match = _RE_IDENTIFIER_END.search(
-        test_prefix
-    )
-
-    if not name_match:
-        return False
-
-    before_name = test_prefix[
-        :name_match.start()
-    ].strip()
-
-    if not before_name:
-        return False
-
-    # =====================================================
-    # Qualified scope in prefix
-    # =====================================================
-
-    if "::" in before_name:
-
-        if "=" in before_name:
-            return False
-
-        # A scope ending in :: is strong evidence of a
-        # member/qualified function.
-        if re.search(
-            r'(?:^|[\s*&])'
-            r'(?:[A-Za-z_]\w*)'
-            r'(?:\s*::\s*[A-Za-z_]\w*)*'
-            r'\s*::\s*$',
-            before_name
-        ):
-
-            return True
-
-    # =====================================================
-    # Return type
-    # =====================================================
-
-    return_type = before_name
-
-    if not return_type:
-        return False
-
-    # -----------------------------------------------------
-    # Expressions cannot be return types.
-    # -----------------------------------------------------
-
-    if re.search(
-        r'[=+\-/!|^]',
-        return_type
-    ):
-
-        return False
-
-    if "." in return_type:
-        return False
-
-    if "[" in return_type or "]" in return_type:
-        return False
-
-    # =====================================================
-    # Remove pointer/reference symbols
-    # =====================================================
-
-    type_for_validation = re.sub(
-        r'[\*&]',
-        " ",
-        return_type
-    )
-
-    type_for_validation = clean_spaces(
-        type_for_validation
-    )
-
-    if not type_for_validation:
-        return False
-
-    # =====================================================
-    # Validate return type
-    # =====================================================
-
-    if not _RE_TYPE.fullmatch(
-        type_for_validation
-    ):
-
-        return False
-
-    # =====================================================
-    # Additional assignment protection
-    # =====================================================
-
-    if _RE_ASSIGNMENT_NAME.search(
-        declaration
-    ):
-
-        if not _RE_ASSIGNMENT_OPERATOR.search(
-            declaration
-        ):
-
-            return False
-
-    # =====================================================
-    # Reject nested function calls in prefix
-    # =====================================================
-
-    inner_prefix = declaration[:start]
-
-    # Remove the actual function name from consideration.
-    inner_prefix = _RE_FUNCTION_CALL_NAME.sub(
-        "",
-        inner_prefix
-    ).strip()
-
-    if _RE_NESTED_CALL.search(
-        inner_prefix
-    ):
-
-        return False
-
-    return True
 
 
 # =========================================================
@@ -1178,7 +1211,10 @@ def process_condition(
 
     if m:
 
-        cond = m.group(1) in defines
+        cond = (
+            m.group(1)
+            in defines
+        )
 
         stack.append(
             {
@@ -1186,7 +1222,8 @@ def process_condition(
                     stack[-1]["active"],
 
                 "active":
-                    stack[-1]["active"] and cond,
+                    stack[-1]["active"]
+                    and cond,
 
                 "taken":
                     cond
@@ -1202,7 +1239,10 @@ def process_condition(
 
     if m:
 
-        cond = m.group(1) not in defines
+        cond = (
+            m.group(1)
+            not in defines
+        )
 
         stack.append(
             {
@@ -1210,7 +1250,8 @@ def process_condition(
                     stack[-1]["active"],
 
                 "active":
-                    stack[-1]["active"] and cond,
+                    stack[-1]["active"]
+                    and cond,
 
                 "taken":
                     cond
@@ -1231,16 +1272,19 @@ def process_condition(
             defines
         )
 
+        cond = bool(cond)
+
         stack.append(
             {
                 "parent":
                     stack[-1]["active"],
 
                 "active":
-                    stack[-1]["active"] and cond,
+                    stack[-1]["active"]
+                    and cond,
 
                 "taken":
-                    bool(cond)
+                    cond
             }
         )
 
@@ -1264,9 +1308,11 @@ def process_condition(
 
         else:
 
-            cond = eval_pp_expr(
-                m.group(1),
-                defines
+            cond = bool(
+                eval_pp_expr(
+                    m.group(1),
+                    defines
+                )
             )
 
             level["active"] = (
@@ -1275,6 +1321,7 @@ def process_condition(
             )
 
             if cond:
+
                 level["taken"] = True
 
         return True
@@ -1304,6 +1351,7 @@ def process_condition(
     ):
 
         if len(stack) > 1:
+
             stack.pop()
 
         return True
@@ -1312,17 +1360,23 @@ def process_condition(
 
 
 # =========================================================
-# Determine whether a brace belongs to a function
+# Find function brace
 # =========================================================
 
-def find_function_brace(line):
+def find_function_brace(
+    line
+):
 
-    position = line.rfind("{")
+    position = line.rfind(
+        "{"
+    )
 
     if position < 0:
         return -1
 
-    prefix = line[:position].strip()
+    prefix = line[
+        :position
+    ].strip()
 
     if not prefix:
         return -1
@@ -1333,23 +1387,10 @@ def find_function_brace(line):
     if ")" not in prefix:
         return -1
 
-    last_close = prefix.rfind(")")
+    if looks_like_function(
+        prefix
+    ):
 
-    if last_close < 0:
-        return -1
-
-    after_close = prefix[
-        last_close + 1:
-    ].strip()
-
-    # -----------------------------------------------------
-    # Function declarations ending in ';' are not bodies.
-    # -----------------------------------------------------
-
-    if after_close.endswith(";"):
-        return -1
-
-    if looks_like_function(prefix):
         return position
 
     return -1
@@ -1376,7 +1417,9 @@ def append_function(
     functions.append(
         {
             "file":
-                os.path.basename(filename),
+                os.path.basename(
+                    filename
+                ),
 
             "path":
                 relative_path,
@@ -1391,7 +1434,7 @@ def append_function(
 
 
 # =========================================================
-# Parse one C/C++ implementation/header file
+# Parse one C/C++ file
 # =========================================================
 
 def parse_cpp_file(
@@ -1414,11 +1457,16 @@ def parse_cpp_file(
 
             text = f.read()
 
-    except (FileNotFoundError, OSError):
+    except (
+        FileNotFoundError,
+        OSError
+    ):
 
         return
 
-    text = remove_comments(text)
+    text = remove_comments(
+        text
+    )
 
     lines = text.splitlines()
 
@@ -1431,6 +1479,7 @@ def parse_cpp_file(
     ]
 
     function_depth = 0
+
     declaration = ""
 
     i = 0
@@ -1438,10 +1487,14 @@ def parse_cpp_file(
 
     while i < total_lines:
 
-        if verbose and i % 500 == 0:
+        if (
+            verbose
+            and i % 500 == 0
+        ):
 
             print(
-                f"Parsing line {i + 1}/{total_lines} "
+                f"Parsing line "
+                f"{i + 1}/{total_lines} "
                 f"in {filename}",
                 flush=True
             )
@@ -1471,20 +1524,25 @@ def parse_cpp_file(
             continue
 
         # =================================================
-        # Inactive preprocessor branch
+        # Inactive branch
         # =================================================
 
         if not stack[-1]["active"]:
             continue
 
         # =================================================
-        # Inside function body
+        # Function body
         # =================================================
 
         if function_depth > 0:
 
-            function_depth += line.count("{")
-            function_depth -= line.count("}")
+            function_depth += line.count(
+                "{"
+            )
+
+            function_depth -= line.count(
+                "}"
+            )
 
             if function_depth <= 0:
 
@@ -1494,37 +1552,31 @@ def parse_cpp_file(
             continue
 
         # =================================================
-        # Standalone closing brace
+        # Closing brace
         # =================================================
 
         if line == "}":
 
             declaration = ""
-            continue
 
-        # =================================================
-        # Closing brace followed by something
-        # =================================================
+            continue
 
         if line.startswith("}"):
 
-            line = _RE_WHILE_AFTER_BRACE.sub(
-                "",
-                line
-            ).strip()
+            declaration = ""
+
+            continue
+
+        # =================================================
+        # Ignore obvious macros
+        # =================================================
+
+        if _RE_UPPERCASE_MACRO.fullmatch(
+            line
+        ):
 
             declaration = ""
 
-            if not line:
-                continue
-
-        # =================================================
-        # Ignore obvious macro invocations
-        # =================================================
-
-        if _RE_UPPERCASE_MACRO.match(line):
-
-            declaration = ""
             continue
 
         # =================================================
@@ -1532,25 +1584,30 @@ def parse_cpp_file(
         # =================================================
 
         if declaration:
+
             declaration += " "
 
         declaration += line
 
         # =================================================
-        # No brace:
-        #
-        # Only a semicolon can terminate this declaration.
+        # No opening brace
         # =================================================
 
         if "{" not in line:
 
+            # -------------------------------------------------
+            # A declaration ending in ';' is not an
+            # implementation.
+            # -------------------------------------------------
+
             if ";" in line:
+
                 declaration = ""
 
             continue
 
         # =================================================
-        # Brace exists.
+        # Opening brace
         # =================================================
 
         brace_position = find_function_brace(
@@ -1563,7 +1620,9 @@ def parse_cpp_file(
                 :brace_position
             ].strip()
 
-            if looks_like_function(header):
+            if looks_like_function(
+                header
+            ):
 
                 normalized = normalize_function(
                     header
@@ -1578,20 +1637,24 @@ def parse_cpp_file(
                         normalized
                     )
 
-                # -----------------------------------------
-                # Enter function body.
-                # -----------------------------------------
-
                 remaining = declaration[
                     brace_position:
                 ]
 
-                opens = remaining.count("{")
-                closes = remaining.count("}")
+                opens = remaining.count(
+                    "{"
+                )
 
-                function_depth = opens - closes
+                closes = remaining.count(
+                    "}"
+                )
+
+                function_depth = (
+                    opens - closes
+                )
 
                 if function_depth < 0:
+
                     function_depth = 0
 
                 declaration = ""
@@ -1601,11 +1664,20 @@ def parse_cpp_file(
         # =================================================
         # Non-function brace
         #
-        # class / struct / namespace / enum / initializer
+        # class
+        # struct
+        # namespace
+        # enum
+        # initializer
         # =================================================
 
-        opens = declaration.count("{")
-        closes = declaration.count("}")
+        opens = declaration.count(
+            "{"
+        )
+
+        closes = declaration.count(
+            "}"
+        )
 
         if opens or closes:
 
@@ -1617,7 +1689,7 @@ def parse_cpp_file(
 
 
 # =========================================================
-# Parse directory with C/C++ implementations
+# Parse implementation directory
 # =========================================================
 
 def parse_implementations(
@@ -1628,6 +1700,7 @@ def parse_implementations(
 ):
 
     if defines is None:
+
         defines = {}
 
     if eval_pp_expr is None:
@@ -1643,18 +1716,6 @@ def parse_implementations(
     functions = []
 
     visited = set()
-
-    # -----------------------------------------------------
-    # IMPORTANT:
-    #
-    # .h/.hpp are included because DOSBox-X contains real
-    # inline implementations there, for example:
-    #
-    #   writeString()
-    #   readString()
-    #
-    # Declarations ending in ';' are still ignored.
-    # -----------------------------------------------------
 
     implementation_extensions = {
         ".c",
@@ -1672,12 +1733,9 @@ def parse_implementations(
         directory
     ):
 
-        # -------------------------------------------------
-        # Avoid common generated/build directories.
-        # -------------------------------------------------
-
         dirs[:] = [
-            d for d in dirs
+            d
+            for d in dirs
             if d not in {
                 ".git",
                 ".svn",
@@ -1706,7 +1764,9 @@ def parse_implementations(
             if filename in visited:
                 continue
 
-            visited.add(filename)
+            visited.add(
+                filename
+            )
 
             relative_path = os.path.relpath(
                 filename,
@@ -1716,7 +1776,8 @@ def parse_implementations(
             if verbose:
 
                 print(
-                    f"Parsing C/C++ file: {filename}",
+                    f"Parsing C/C++ file: "
+                    f"{filename}",
                     flush=True
                 )
 
@@ -1733,10 +1794,12 @@ def parse_implementations(
 
 
 # =========================================================
-# Optional helper: print results
+# Print implementations
 # =========================================================
 
-def print_implementations(functions):
+def print_implementations(
+    functions
+):
 
     for item in functions:
 
