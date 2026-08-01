@@ -15,28 +15,15 @@ _identifier = re.compile(
 
 def eval_pp_expr(expr, defines):
 
-    # ---------------------------------------------------------
-    # Remove C preprocessor line-continuation characters.
-    #
-    # Example:
-    #
-    #   A && \
-    #   B
-    #
-    # becomes:
-    #
-    #   A && B
-    # ---------------------------------------------------------
-
     expr = re.sub(
         r'\\\s*',
         ' ',
         expr
     )
 
-    # ---------------------------------------------------------
-    # Handle defined(NAME)
-    # ---------------------------------------------------------
+    # -----------------------------------------------------
+    # defined(NAME)
+    # -----------------------------------------------------
 
     expr = re.sub(
         r'defined\s*\(\s*([A-Za-z_]\w*)\s*\)',
@@ -47,9 +34,9 @@ def eval_pp_expr(expr, defines):
         expr
     )
 
-    # ---------------------------------------------------------
-    # Handle defined NAME
-    # ---------------------------------------------------------
+    # -----------------------------------------------------
+    # defined NAME
+    # -----------------------------------------------------
 
     expr = re.sub(
         r'defined\s+([A-Za-z_]\w*)',
@@ -60,28 +47,9 @@ def eval_pp_expr(expr, defines):
         expr
     )
 
-    # ---------------------------------------------------------
-    # Handle function-like macros.
-    #
-    # IMPORTANT:
-    #
-    # If an unknown identifier is followed by '(',
-    # do NOT produce:
-    #
-    #     0(...)
-    #
-    # because Python would interpret that as calling integer 0.
-    #
-    # Instead, the complete expression is replaced with 0.
-    #
-    # Example:
-    #
-    #     SOME_MACRO(0)
-    #
-    # becomes:
-    #
-    #     0
-    # ---------------------------------------------------------
+    # -----------------------------------------------------
+    # Function-like macros
+    # -----------------------------------------------------
 
     expr = re.sub(
         r'\b[A-Za-z_]\w*\s*\([^()]*\)',
@@ -108,15 +76,13 @@ def eval_pp_expr(expr, defines):
         expr
     )
 
-    # ---------------------------------------------------------
-    # Replace identifiers with their values.
-    # ---------------------------------------------------------
+    # -----------------------------------------------------
+    # Replace identifiers
+    # -----------------------------------------------------
 
     def replace_identifier(match):
 
         name = match.group(0)
-
-        # Python logical operators must remain unchanged.
 
         if name in (
             "and",
@@ -139,9 +105,9 @@ def eval_pp_expr(expr, defines):
         expr
     )
 
-    # ---------------------------------------------------------
-    # Convert C logical operators to Python.
-    # ---------------------------------------------------------
+    # -----------------------------------------------------
+    # C logical operators -> Python
+    # -----------------------------------------------------
 
     expr = expr.replace(
         "&&",
@@ -153,30 +119,16 @@ def eval_pp_expr(expr, defines):
         " or "
     )
 
-    # ---------------------------------------------------------
-    # Convert C ! to Python not.
-    #
-    # Do not modify !=
-    # ---------------------------------------------------------
-
     expr = re.sub(
         r'!(?!=)',
         " not ",
         expr
     )
 
-    # ---------------------------------------------------------
-    # Remove any remaining backslashes.
-    # ---------------------------------------------------------
-
     expr = expr.replace(
         "\\",
         " "
     )
-
-    # ---------------------------------------------------------
-    # Evaluate.
-    # ---------------------------------------------------------
 
     try:
 
@@ -193,6 +145,7 @@ def eval_pp_expr(expr, defines):
     except Exception:
 
         return False
+
 
 # =========================================================
 # Remove comments safely
@@ -213,14 +166,13 @@ def remove_comments(text):
 
         ch = text[i]
 
-
         # -------------------------------------------------
         # Normal code
         # -------------------------------------------------
 
         if state == "normal":
 
-            # C / C++ line comment
+            # Line comment
 
             if (
                 ch == "/"
@@ -241,8 +193,7 @@ def remove_comments(text):
 
                 continue
 
-
-            # C / C++ block comment
+            # Block comment
 
             if (
                 ch == "/"
@@ -265,16 +216,13 @@ def remove_comments(text):
 
                         break
 
-
                     if text[i] == "\n":
 
                         result.append("\n")
 
-
                     i += 1
 
                 continue
-
 
             # String
 
@@ -288,7 +236,6 @@ def remove_comments(text):
 
                 continue
 
-
             # Character
 
             if ch == "'":
@@ -301,13 +248,11 @@ def remove_comments(text):
 
                 continue
 
-
             result.append(ch)
 
             i += 1
 
             continue
-
 
         # -------------------------------------------------
         # String
@@ -317,7 +262,6 @@ def remove_comments(text):
 
             result.append(ch)
 
-
             if ch == "\\":
 
                 if i + 1 < length:
@@ -330,16 +274,13 @@ def remove_comments(text):
 
                     continue
 
-
             if ch == '"':
 
                 state = "normal"
 
-
             i += 1
 
             continue
-
 
         # -------------------------------------------------
         # Character
@@ -349,7 +290,6 @@ def remove_comments(text):
 
             result.append(ch)
 
-
             if ch == "\\":
 
                 if i + 1 < length:
@@ -362,28 +302,19 @@ def remove_comments(text):
 
                     continue
 
-
             if ch == "'":
 
                 state = "normal"
 
-
             i += 1
 
             continue
-
 
     return "".join(result)
 
 
 # =========================================================
 # Split C++ parameter list
-#
-# Important:
-#
-#   std::map<std::string, int>
-#
-# contains a comma that is NOT a parameter separator.
 # =========================================================
 
 def split_parameters(parameters):
@@ -397,14 +328,11 @@ def split_parameters(parameters):
     brace_depth = 0
     angle_depth = 0
 
-
     i = 0
-
 
     while i < len(parameters):
 
         ch = parameters[i]
-
 
         # -------------------------------------------------
         # Parentheses
@@ -420,7 +348,6 @@ def split_parameters(parameters):
 
             continue
 
-
         if ch == ")":
 
             if paren_depth > 0:
@@ -432,7 +359,6 @@ def split_parameters(parameters):
             i += 1
 
             continue
-
 
         # -------------------------------------------------
         # Arrays
@@ -448,7 +374,6 @@ def split_parameters(parameters):
 
             continue
 
-
         if ch == "]":
 
             if bracket_depth > 0:
@@ -460,7 +385,6 @@ def split_parameters(parameters):
             i += 1
 
             continue
-
 
         # -------------------------------------------------
         # Initializer braces
@@ -476,7 +400,6 @@ def split_parameters(parameters):
 
             continue
 
-
         if ch == "}":
 
             if brace_depth > 0:
@@ -488,7 +411,6 @@ def split_parameters(parameters):
             i += 1
 
             continue
-
 
         # -------------------------------------------------
         # C++ template arguments
@@ -504,7 +426,6 @@ def split_parameters(parameters):
 
             continue
 
-
         if ch == ">":
 
             if angle_depth > 0:
@@ -516,7 +437,6 @@ def split_parameters(parameters):
             i += 1
 
             continue
-
 
         # -------------------------------------------------
         # Top-level comma
@@ -534,11 +454,9 @@ def split_parameters(parameters):
                 current
             ).strip()
 
-
             if param:
 
                 result.append(param)
-
 
             current = []
 
@@ -546,35 +464,23 @@ def split_parameters(parameters):
 
             continue
 
-
         current.append(ch)
 
         i += 1
-
 
     param = "".join(
         current
     ).strip()
 
-
     if param:
 
         result.append(param)
-
 
     return result
 
 
 # =========================================================
 # Remove default argument
-#
-# Example:
-#
-#   int count = 10
-#
-# becomes:
-#
-#   int count
 # =========================================================
 
 def remove_default_argument(param):
@@ -584,19 +490,15 @@ def remove_default_argument(param):
     brace_depth = 0
     angle_depth = 0
 
-
     i = 0
-
 
     while i < len(param):
 
         ch = param[i]
 
-
         if ch == "(":
 
             paren_depth += 1
-
 
         elif ch == ")":
 
@@ -604,11 +506,9 @@ def remove_default_argument(param):
 
                 paren_depth -= 1
 
-
         elif ch == "[":
 
             bracket_depth += 1
-
 
         elif ch == "]":
 
@@ -616,11 +516,9 @@ def remove_default_argument(param):
 
                 bracket_depth -= 1
 
-
         elif ch == "{":
 
             brace_depth += 1
-
 
         elif ch == "}":
 
@@ -628,18 +526,15 @@ def remove_default_argument(param):
 
                 brace_depth -= 1
 
-
         elif ch == "<":
 
             angle_depth += 1
-
 
         elif ch == ">":
 
             if angle_depth > 0:
 
                 angle_depth -= 1
-
 
         elif (
             ch == "="
@@ -651,9 +546,7 @@ def remove_default_argument(param):
 
             return param[:i].strip()
 
-
         i += 1
-
 
     return param.strip()
 
@@ -670,25 +563,16 @@ def remove_parameter_name(param):
 
     param = param.strip()
 
-
     if not param:
 
         return ""
-
 
     if param == "...":
 
         return "..."
 
-
     # -----------------------------------------------------
     # Function pointer
-    #
-    #   void (*callback)(int)
-    #
-    # becomes:
-    #
-    #   void (*)(int)
     # -----------------------------------------------------
 
     param = re.sub(
@@ -697,22 +581,14 @@ def remove_parameter_name(param):
         param
     )
 
-
     param = re.sub(
         r'\(\s*&\s*[A-Za-z_]\w*\s*\)',
         '(&)',
         param
     )
 
-
     # -----------------------------------------------------
     # Array parameter
-    #
-    #   int values[]
-    #
-    # becomes:
-    #
-    #   int []
     # -----------------------------------------------------
 
     m = re.match(
@@ -721,7 +597,6 @@ def remove_parameter_name(param):
         param
     )
 
-
     if m:
 
         param = (
@@ -729,7 +604,6 @@ def remove_parameter_name(param):
             + " "
             + m.group(3)
         )
-
 
     else:
 
@@ -742,13 +616,11 @@ def remove_parameter_name(param):
             param
         )
 
-
         if m:
 
             before = m.group(1)
 
             name = m.group(2)
-
 
             keywords = {
                 "const",
@@ -773,11 +645,9 @@ def remove_parameter_name(param):
                 "enum"
             }
 
-
             if name not in keywords:
 
                 param = before
-
 
     # -----------------------------------------------------
     # Normalize pointers and references
@@ -789,20 +659,17 @@ def remove_parameter_name(param):
         param
     )
 
-
     param = re.sub(
         r'\s*&\s*',
         ' &',
         param
     )
 
-
     param = re.sub(
         r'\s+',
         ' ',
         param
     )
-
 
     return param.strip()
 
@@ -817,14 +684,11 @@ def normalize_prototype(prototype):
         prototype.split()
     )
 
-
     prototype = prototype.strip()
-
 
     if not prototype.endswith(";"):
 
         return prototype
-
 
     # -----------------------------------------------------
     # Find parameter list
@@ -833,7 +697,6 @@ def normalize_prototype(prototype):
     start = -1
 
     depth = 0
-
 
     for i, ch in enumerate(prototype):
 
@@ -845,11 +708,9 @@ def normalize_prototype(prototype):
 
                 break
 
-
         elif ch == "<":
 
             depth += 1
-
 
         elif ch == ">":
 
@@ -857,11 +718,9 @@ def normalize_prototype(prototype):
 
                 depth -= 1
 
-
     if start < 0:
 
         return prototype
-
 
     # -----------------------------------------------------
     # Find matching ')'
@@ -871,7 +730,6 @@ def normalize_prototype(prototype):
 
     end = -1
 
-
     for i in range(
         start,
         len(prototype)
@@ -879,16 +737,13 @@ def normalize_prototype(prototype):
 
         ch = prototype[i]
 
-
         if ch == "(":
 
             depth += 1
 
-
         elif ch == ")":
 
             depth -= 1
-
 
             if depth == 0:
 
@@ -896,29 +751,23 @@ def normalize_prototype(prototype):
 
                 break
 
-
     if end < 0:
 
         return prototype
-
 
     prefix = prototype[
         :start + 1
     ]
 
-
     args = prototype[
         start + 1:end
     ]
-
 
     suffix = prototype[
         end:
     ]
 
-
     args = args.strip()
-
 
     if args == "void":
 
@@ -928,9 +777,7 @@ def normalize_prototype(prototype):
             + suffix
         )
 
-
     new_args = []
-
 
     for arg in split_parameters(
         args
@@ -940,18 +787,15 @@ def normalize_prototype(prototype):
             arg
         )
 
-
         if arg:
 
             new_args.append(arg)
-
 
     result = (
         prefix
         + ", ".join(new_args)
         + suffix
     )
-
 
     # -----------------------------------------------------
     # Final cleanup
@@ -963,13 +807,11 @@ def normalize_prototype(prototype):
         result
     )
 
-
     result = re.sub(
         r'\s+\)',
         ')',
         result
     )
-
 
     result = re.sub(
         r'\(\s+',
@@ -977,18 +819,16 @@ def normalize_prototype(prototype):
         result
     )
 
-
     result = re.sub(
         r'\s*::\s*',
         '::',
         result
     )
 
-
     result = result.strip()
 
-
     return result
+
 
 # =========================================================
 # Determine whether a statement is a C/C++ function
@@ -999,25 +839,13 @@ def is_prototype(statement):
 
     statement = statement.strip()
 
-    # -----------------------------------------------------
-    # Must end with semicolon
-    # -----------------------------------------------------
-
     if not statement.endswith(";"):
 
         return False
 
-    # -----------------------------------------------------
-    # Ignore preprocessor directives
-    # -----------------------------------------------------
-
     if statement.startswith("#"):
 
         return False
-
-    # -----------------------------------------------------
-    # Remove trailing semicolon
-    # -----------------------------------------------------
 
     body = statement[:-1].strip()
 
@@ -1025,9 +853,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Reject control statements
-    # =====================================================
+    # -----------------------------------------------------
+    # Control statements
+    # -----------------------------------------------------
 
     if re.match(
         r'^(?:'
@@ -1040,9 +868,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Reject typedef / using
-    # =====================================================
+    # -----------------------------------------------------
+    # typedef / using
+    # -----------------------------------------------------
 
     if re.match(
         r'^(?:typedef|using)\b',
@@ -1051,9 +879,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Must contain parentheses
-    # =====================================================
+    # -----------------------------------------------------
+    # Parentheses
+    # -----------------------------------------------------
 
     if "(" not in body:
 
@@ -1063,9 +891,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Find FIRST parameter opening parenthesis
-    # =====================================================
+    # -----------------------------------------------------
+    # First parameter opening parenthesis
+    # -----------------------------------------------------
 
     start = body.find("(")
 
@@ -1079,26 +907,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # IMPORTANT:
-    #
-    # Reject assignments / initializers.
-    #
-    # Examples:
-    #
-    #   double rtnow = PIC_FullIndex()
-    #
-    #   DynReg * di_base = DREG(ES)
-    #
-    #   name = new char[...]
-    #
-    #   ext.attribute = real_readw(...)
-    #
-    #   ticksLast = GetTicks()
-    #
-    #   rep_ecx_jmp = gen_create_branch_long(...)
-    #
-    # =====================================================
+    # -----------------------------------------------------
+    # Reject assignments
+    # -----------------------------------------------------
 
     assignment = re.search(
         r'(?<![=!<>])=(?!=)',
@@ -1107,16 +918,6 @@ def is_prototype(statement):
 
     if assignment:
 
-        # -------------------------------------------------
-        # The only valid exception is C++ operator=
-        #
-        # Examples:
-        #
-        #   operator=(...)
-        #   Foo::operator=(...)
-        #
-        # -------------------------------------------------
-
         if not re.search(
             r'\boperator\s*=',
             prefix
@@ -1124,9 +925,9 @@ def is_prototype(statement):
 
             return False
 
-    # =====================================================
-    # Reject obvious executable expressions
-    # =====================================================
+    # -----------------------------------------------------
+    # Reject expressions
+    # -----------------------------------------------------
 
     if re.search(
         r'\b(?:return|throw)\b',
@@ -1135,9 +936,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
+    # -----------------------------------------------------
     # Remove declaration qualifiers
-    # =====================================================
+    # -----------------------------------------------------
 
     prefix_without_qualifiers = re.sub(
         r'\b(?:'
@@ -1161,15 +962,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Reject function calls
-    #
-    #   printf(...)
-    #   foo(...)
-    #   DREG(...)
-    #   GetTicks(...)
-    #
-    # =====================================================
+    # -----------------------------------------------------
+    # Reject standalone function calls
+    # -----------------------------------------------------
 
     if re.fullmatch(
         r'[A-Za-z_]\w*',
@@ -1178,13 +973,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Reject member/function calls
-    #
-    #   object.foo(...)
-    #   ptr->foo(...)
-    #
-    # =====================================================
+    # -----------------------------------------------------
+    # Reject member calls
+    # -----------------------------------------------------
 
     if "." in prefix_without_qualifiers:
 
@@ -1194,13 +985,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
+    # -----------------------------------------------------
     # Function pointer declarations
-    #
-    #   void (*callback)(int);
-    #
-    # These are not treated as function prototypes here.
-    # =====================================================
+    # -----------------------------------------------------
 
     if re.search(
         r'\(\s*[*&]\s*[A-Za-z_]\w*\s*\)',
@@ -1209,29 +996,17 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Reject braces
-    #
-    # A prototype must not contain a function body or
-    # initializer.
-    # =====================================================
+    # -----------------------------------------------------
+    # Prototype cannot contain braces
+    # -----------------------------------------------------
 
     if "{" in body or "}" in body:
 
         return False
 
-    # =====================================================
+    # -----------------------------------------------------
     # Function name
-    #
-    # Valid:
-    #
-    #   Foo
-    #   Foo::bar
-    #   A::B::bar
-    #   ~Foo
-    #   operator=
-    #   operator<<
-    # =====================================================
+    # -----------------------------------------------------
 
     function_name_pattern = (
         r'(?:'
@@ -1268,11 +1043,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Validate that this looks like a declaration
-    #
-    # Remove the final function name.
-    # =====================================================
+    # -----------------------------------------------------
+    # Extract final function name
+    # -----------------------------------------------------
 
     name_match = re.search(
         r'(?:'
@@ -1289,11 +1062,7 @@ def is_prototype(statement):
     )
 
     # -----------------------------------------------------
-    # Scoped functions such as:
-    #
-    #   Foo::bar(...)
-    #
-    # are valid even when there is no explicit return type.
+    # Scoped function
     # -----------------------------------------------------
 
     if "::" in prefix_without_qualifiers:
@@ -1311,45 +1080,23 @@ def is_prototype(statement):
 
         return True
 
-    # -----------------------------------------------------
-    # If we couldn't identify the final name, reject.
-    # -----------------------------------------------------
-
     if not name_match:
 
         return False
 
     function_name = name_match.group(0)
 
-    # -----------------------------------------------------
-    # Everything before the function name.
-    # -----------------------------------------------------
-
     return_type = prefix_without_qualifiers[
         :name_match.start()
     ].strip()
-
-    # -----------------------------------------------------
-    # A normal function must have a return type.
-    #
-    # Examples:
-    #
-    #   void Foo(...)
-    #   int Foo(...)
-    #   bool Foo(...)
-    #   Bitu Foo(...)
-    #   DynReg * Foo(...)
-    #   DOS_File & Foo(...)
-    #
-    # -----------------------------------------------------
 
     if not return_type:
 
         return False
 
-    # =====================================================
-    # Reject expression operators in return type
-    # =====================================================
+    # -----------------------------------------------------
+    # Reject expression operators
+    # -----------------------------------------------------
 
     if re.search(
         r'[=+\-/!|^]',
@@ -1358,9 +1105,9 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Reject array/index expressions
-    # =====================================================
+    # -----------------------------------------------------
+    # Reject arrays
+    # -----------------------------------------------------
 
     if "[" in return_type:
 
@@ -1370,29 +1117,17 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
+    # -----------------------------------------------------
     # Reject member access
-    # =====================================================
+    # -----------------------------------------------------
 
     if "." in return_type:
 
         return False
 
-    # =====================================================
-    # Validate plausible C/C++ return type
-    #
-    # Examples:
-    #
-    #   void
-    #   int
-    #   unsigned int
-    #   Bitu
-    #   DOS_File
-    #   DynReg *
-    #   DOS_File &
-    #   const char *
-    #   std::string
-    # =====================================================
+    # -----------------------------------------------------
+    # Validate return type
+    # -----------------------------------------------------
 
     return_type_pattern = re.compile(
         r'^(?:'
@@ -1412,11 +1147,8 @@ def is_prototype(statement):
 
         return False
 
-    # =====================================================
-    # Everything passed all checks.
-    # =====================================================
-
     return True
+
 
 # =========================================================
 # Process one preprocessor conditional
@@ -1437,14 +1169,12 @@ def process_condition(
         line
     )
 
-
     if m:
 
         cond = (
             m.group(1)
             in defines
         )
-
 
         stack.append(
             {
@@ -1460,9 +1190,7 @@ def process_condition(
             }
         )
 
-
         return True
-
 
     # -----------------------------------------------------
     # #ifndef
@@ -1473,14 +1201,12 @@ def process_condition(
         line
     )
 
-
     if m:
 
         cond = (
             m.group(1)
             not in defines
         )
-
 
         stack.append(
             {
@@ -1496,9 +1222,7 @@ def process_condition(
             }
         )
 
-
         return True
-
 
     # -----------------------------------------------------
     # #if
@@ -1509,14 +1233,12 @@ def process_condition(
         line
     )
 
-
     if m:
 
         cond = eval_pp_expr(
             m.group(1),
             defines
         )
-
 
         stack.append(
             {
@@ -1532,9 +1254,7 @@ def process_condition(
             }
         )
 
-
         return True
-
 
     # -----------------------------------------------------
     # #elif
@@ -1545,16 +1265,13 @@ def process_condition(
         line
     )
 
-
     if m:
 
         level = stack[-1]
 
-
         if level["taken"]:
 
             level["active"] = False
-
 
         else:
 
@@ -1563,20 +1280,16 @@ def process_condition(
                 defines
             )
 
-
             level["active"] = (
                 level["parent"]
                 and cond
             )
 
-
             if cond:
 
                 level["taken"] = True
 
-
         return True
-
 
     # -----------------------------------------------------
     # #else
@@ -1589,18 +1302,14 @@ def process_condition(
 
         level = stack[-1]
 
-
         level["active"] = (
             level["parent"]
             and not level["taken"]
         )
 
-
         level["taken"] = True
 
-
         return True
-
 
     # -----------------------------------------------------
     # #endif
@@ -1615,11 +1324,81 @@ def process_condition(
 
             stack.pop()
 
-
         return True
 
-
     return False
+
+
+# =========================================================
+# Qualify member prototype
+#
+# Example:
+#
+#   class IO_CalloutObject {
+#       void InvalidateCachedHandlers(void);
+#   };
+#
+# becomes:
+#
+#   void IO_CalloutObject::InvalidateCachedHandlers(void);
+# =========================================================
+
+def qualify_member_prototype(
+    prototype,
+    class_scope
+):
+
+    if not class_scope:
+
+        return prototype
+
+    # -----------------------------------------------------
+    # Already qualified?
+    # -----------------------------------------------------
+
+    if "::" in prototype:
+
+        return prototype
+
+    # -----------------------------------------------------
+    # Locate function name.
+    #
+    # Keep the return type untouched.
+    # -----------------------------------------------------
+
+    match = re.match(
+        r'^(.*?)'
+        r'([A-Za-z_]\w*|~[A-Za-z_]\w*|operator\s*.*)'
+        r'(\s*\(.*)$',
+        prototype
+    )
+
+    if not match:
+
+        return prototype
+
+    prefix = match.group(1).strip()
+
+    name = match.group(2).strip()
+
+    suffix = match.group(3)
+
+    if not prefix:
+
+        return prototype
+
+    scope = "::".join(
+        class_scope
+    )
+
+    return (
+        prefix
+        + " "
+        + scope
+        + "::"
+        + name
+        + suffix
+    )
 
 
 # =========================================================
@@ -1638,26 +1417,21 @@ def parse_preprocessor(
 
         defines = {}
 
-
     if prototypes is None:
 
         prototypes = []
-
 
     if visited is None:
 
         visited = set()
 
-
     if include_paths is None:
 
         include_paths = []
 
-
     file_path = os.path.abspath(
         file_path
     )
-
 
     # -----------------------------------------------------
     # Avoid recursive includes
@@ -1670,16 +1444,13 @@ def parse_preprocessor(
             prototypes
         )
 
-
     visited.add(
         file_path
     )
 
-
     current_dir = os.path.dirname(
         file_path
     )
-
 
     # -----------------------------------------------------
     # Read file
@@ -1696,7 +1467,6 @@ def parse_preprocessor(
 
             text = f.read()
 
-
     except FileNotFoundError:
 
         return (
@@ -1704,15 +1474,13 @@ def parse_preprocessor(
             prototypes
         )
 
-
     # -----------------------------------------------------
-    # Remove comments safely
+    # Remove comments
     # -----------------------------------------------------
 
     text = remove_comments(
         text
     )
-
 
     stack = [
         {
@@ -1722,9 +1490,32 @@ def parse_preprocessor(
         }
     ]
 
-
     statement = ""
 
+    # =====================================================
+    # C++ scope tracking
+    #
+    # Each entry contains:
+    #
+    #   {
+    #       "name": "IO_CalloutObject",
+    #       "depth": 3
+    #   }
+    #
+    # This allows nested classes:
+    #
+    #   class A {
+    #       class B {
+    #           void test();
+    #       };
+    #   };
+    #
+    # -> void A::B::test();
+    # =====================================================
+
+    class_scope = []
+
+    brace_depth = 0
 
     # -----------------------------------------------------
     # Process lines
@@ -1734,11 +1525,9 @@ def parse_preprocessor(
 
         line = raw.strip()
 
-
         if not line:
 
             continue
-
 
         # =================================================
         # Preprocessor conditionals
@@ -1752,7 +1541,6 @@ def parse_preprocessor(
 
             continue
 
-
         # -------------------------------------------------
         # Ignore disabled blocks
         # -------------------------------------------------
@@ -1760,7 +1548,6 @@ def parse_preprocessor(
         if not stack[-1]["active"]:
 
             continue
-
 
         # =================================================
         # Include
@@ -1773,21 +1560,17 @@ def parse_preprocessor(
             line
         )
 
-
         if m:
 
             filename = m.group(1)
-
 
             paths = [
                 current_dir
             ]
 
-
             paths.extend(
                 include_paths
             )
-
 
             for path in paths:
 
@@ -1797,7 +1580,6 @@ def parse_preprocessor(
                         filename
                     )
                 )
-
 
                 if os.path.isfile(
                     include_file
@@ -1814,9 +1596,7 @@ def parse_preprocessor(
 
                     break
 
-
             continue
-
 
         # =================================================
         # Define
@@ -1829,23 +1609,19 @@ def parse_preprocessor(
             line
         )
 
-
         if m:
 
             name = m.group(1)
 
             value = m.group(2)
 
-
             if value is None:
 
                 defines[name] = 1
 
-
             else:
 
                 value = value.strip()
-
 
                 try:
 
@@ -1854,14 +1630,11 @@ def parse_preprocessor(
                         0
                     )
 
-
                 except Exception:
 
                     defines[name] = value
 
-
             continue
-
 
         # =================================================
         # Undef
@@ -1872,7 +1645,6 @@ def parse_preprocessor(
             line
         )
 
-
         if m:
 
             defines.pop(
@@ -1880,9 +1652,7 @@ def parse_preprocessor(
                 None
             )
 
-
             continue
-
 
         # =================================================
         # Ignore remaining directives
@@ -1892,7 +1662,6 @@ def parse_preprocessor(
 
             continue
 
-
         # =================================================
         # Prototype collection
         # =================================================
@@ -1901,24 +1670,74 @@ def parse_preprocessor(
 
             continue
 
+        # =================================================
+        # Detect class / struct opening
+        #
+        # Examples:
+        #
+        #   class Foo {
+        #   class Foo : public Bar {
+        #   struct Foo {
+        # =================================================
+
+        class_match = re.match(
+            r'^(?:class|struct)\s+'
+            r'([A-Za-z_]\w*)'
+            r'(?:\s*:[^{]+)?\s*\{',
+            line
+        )
+
+        if class_match:
+
+            class_name = class_match.group(1)
+
+            # -------------------------------------------------
+            # Determine whether this class opening occurs at
+            # the current brace level.
+            # -------------------------------------------------
+
+            opening_count = line.count("{")
+
+            closing_count = line.count("}")
+
+            new_depth = (
+                brace_depth
+                + opening_count
+                - closing_count
+            )
+
+            class_scope.append(
+                {
+                    "name": class_name,
+                    "depth": new_depth
+                }
+            )
+
+            brace_depth = new_depth
+
+            # -------------------------------------------------
+            # Usually the class declaration contains no
+            # prototype on this same line. Continue.
+            # -------------------------------------------------
+
+            continue
+
+        # =================================================
+        # Accumulate declaration
+        # =================================================
 
         statement += " " + line
 
-
-        # -------------------------------------------------
-        # C++ declarations can contain multiple semicolons
-        # in unusual constructs. For our function prototype
-        # parser, process the accumulated statement when a
-        # semicolon is encountered.
-        # -------------------------------------------------
+        # =================================================
+        # Process semicolon-terminated declarations
+        # =================================================
 
         if ";" in line:
 
             parts = statement.split(";")
 
             # -------------------------------------------------
-            # Everything except the final fragment has a
-            # complete semicolon.
+            # Everything except final fragment is complete.
             # -------------------------------------------------
 
             for part in parts[:-1]:
@@ -1930,13 +1749,33 @@ def parse_preprocessor(
                     + ";"
                 )
 
-
                 if is_prototype(stmt):
 
                     normalized = normalize_prototype(
                         stmt
                     )
 
+                    # -------------------------------------------------
+                    # Qualify member functions.
+                    #
+                    # Only the innermost active class is needed here
+                    # for normal classes, but the complete scope is
+                    # preserved for nested classes.
+                    # -------------------------------------------------
+
+                    if class_scope:
+
+                        scope_names = [
+                            item["name"]
+                            for item in class_scope
+                        ]
+
+                        normalized = (
+                            qualify_member_prototype(
+                                normalized,
+                                scope_names
+                            )
+                        )
 
                     if normalized not in prototypes:
 
@@ -1944,13 +1783,49 @@ def parse_preprocessor(
                             normalized
                         )
 
-
             # -------------------------------------------------
-            # Preserve anything after the last semicolon.
+            # Preserve anything after the final semicolon.
             # -------------------------------------------------
 
             statement = parts[-1].strip()
 
+        # =================================================
+        # Update brace depth
+        #
+        # Do this AFTER processing the declaration so that
+        # a prototype inside the class still sees the class
+        # scope.
+        # =================================================
+
+        opening_count = line.count("{")
+
+        closing_count = line.count("}")
+
+        if opening_count or closing_count:
+
+            old_depth = brace_depth
+
+            brace_depth += (
+                opening_count
+                - closing_count
+            )
+
+            # -------------------------------------------------
+            # Remove class scopes whose closing brace has
+            # been reached.
+            # -------------------------------------------------
+
+            while class_scope:
+
+                scope_depth = class_scope[-1]["depth"]
+
+                if brace_depth < scope_depth:
+
+                    class_scope.pop()
+
+                else:
+
+                    break
 
     return (
         defines,

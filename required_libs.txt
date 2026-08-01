@@ -16,6 +16,7 @@ src/debug/debug.cpp
 src/debug/debug_gui.cpp
 src/dos/cdrom_image.cpp
 src/dos/dos.cpp
+src/dos/dos_classes.cpp
 src/dos/dos_devices.cpp
 src/dos/dos_execute.cpp
 src/dos/dos_files.cpp
@@ -26,7 +27,8 @@ src/dos/dos_misc.cpp
 src/dos/dos_mscdex.cpp
 src/dos/dos_programs.cpp
 src/dos/dos_tables.cpp
-src/dos/drive_overlay.cpp
+src/dos/drive_cache.cpp
+src/dos/drive_local.cpp
 src/dos/drive_virtual.cpp
 src/dos/drives.cpp
 src/dosbox.cpp
@@ -55,6 +57,7 @@ src/hardware/keyboard.cpp
 src/hardware/memory.cpp
 src/hardware/mixer.cpp
 src/hardware/mpu401.cpp
+src/hardware/parport/parport.cpp
 src/hardware/parport/printer.cpp
 src/hardware/pci_bus.cpp
 src/hardware/pcspeaker.cpp
@@ -80,7 +83,6 @@ src/hardware/vga_tseng.cpp
 src/hardware/vga_xga.cpp
 src/hardware/voodoo.cpp
 src/ints/bios.cpp
-src/ints/bios_disk.cpp
 src/ints/ems.cpp
 src/ints/int10.cpp
 src/ints/int10_char.cpp

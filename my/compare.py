@@ -58,6 +58,7 @@ def compare_prototypes_implementations(
         if not name:
             continue
 
+        """
         print(
             "DEBUG COMPARE:",
             repr(name),
@@ -76,7 +77,7 @@ def compare_prototypes_implementations(
                 ]
             )
             exit()
-
+        """
 
         if name in impl_index:
 
