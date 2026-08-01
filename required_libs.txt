@@ -73,7 +73,6 @@ mixer.cpp
 mkdir_p.cpp
 mouse.cpp
 mpu401.cpp
-opl.cpp
 paging.cpp
 parport.cpp
 pci_bus.cpp

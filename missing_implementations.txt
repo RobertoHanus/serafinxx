@@ -5,6 +5,7 @@ CPU_Core_KVM_Run
 CPU_Core_KVM_Trap_Run
 GetPropValue
 GetValues
+operator
 GFX_GetBestMode
 DOS_Drive_Cache::MediaChange
 VGA_IsCaptureEnabled
