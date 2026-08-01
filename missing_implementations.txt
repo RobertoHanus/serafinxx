@@ -1,4 +1,3 @@
-getBytes
 operator=
 writeString
 readString
@@ -9,40 +8,10 @@ operator bool
 operator Hex
 operator int
 operator double
-HandleInputline
-Section::PrintData
-Get_prop
 GetPropValue
 GetValues
 operator
 GFX_GetBestMode
-DOS_File::operator=
-DOS_File::Read
-DOS_File::Write
-DOS_File::Seek
-DOS_File::Close
-DOS_File::GetInformation
-DOS_Drive::FileOpen
-DOS_Drive::FileCreate
-DOS_Drive::FileUnlink
-DOS_Drive::RemoveDir
-DOS_Drive::MakeDir
-DOS_Drive::TestDir
-DOS_Drive::FindFirst
-DOS_Drive::FindNext
-DOS_Drive::SetFileAttr
-DOS_Drive::GetFileAttr
-DOS_Drive::GetFileAttrEx
-DOS_Drive::GetCompressedSize
-DOS_Drive::Rename
-DOS_Drive::AllocationInfo
-DOS_Drive::FileStat
-DOS_Drive::GetMediaByte
-DOS_Drive::isRemote
-DOS_Drive::isRemovable
-DOS_Drive::UnMount
-Program::Run
-GetSection
 VGA_IsCaptureEnabled
 VGA_UpdateCapturePending
 VGA_CaptureHasNextFrame
@@ -50,16 +19,6 @@ VGA_CaptureStartNextFrame
 VGA_CaptureMarkError
 VGA_CaptureValidateCurrentFrame
 GetReportedVideoMemorySize
-item_exists
-get_item
-CParallel::handleUpperEvent
-CParallel::Read_PR
-CParallel::Read_COM
-CParallel::Read_SR
-CParallel::Write_PR
-CParallel::Write_CON
-CParallel::Write_IOSEL
-CParallel::Putchar
 clockdom_PCI_BCLK
 clockdom_ISA_OSC
 clockdom_ISA_BCLK
