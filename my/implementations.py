@@ -69,7 +69,7 @@ _RE_OPERATOR_TARGET = re.compile(
     r'|\|\|'
     r'|->\*'
     r'|->'
-    r'|\+'
+    r'\+'
     r'-'
     r'\*'
     r'/'
@@ -147,13 +147,7 @@ def remove_comments(text):
 
         ch = text[i]
 
-        # -------------------------------------------------
-        # Normal
-        # -------------------------------------------------
-
         if state == "normal":
-
-            # Line comment
 
             if (
                 ch == "/"
@@ -169,8 +163,6 @@ def remove_comments(text):
                     i += 1
 
                 continue
-
-            # Block comment
 
             if (
                 ch == "/"
@@ -199,8 +191,6 @@ def remove_comments(text):
 
                 continue
 
-            # String
-
             if ch == '"':
 
                 state = "string"
@@ -210,8 +200,6 @@ def remove_comments(text):
                 i += 1
 
                 continue
-
-            # Character
 
             if ch == "'":
 
@@ -228,10 +216,6 @@ def remove_comments(text):
             i += 1
 
             continue
-
-        # -------------------------------------------------
-        # String
-        # -------------------------------------------------
 
         if state == "string":
 
@@ -256,10 +240,6 @@ def remove_comments(text):
             i += 1
 
             continue
-
-        # -------------------------------------------------
-        # Character
-        # -------------------------------------------------
 
         if state == "char":
 
@@ -348,7 +328,6 @@ def split_parameters(parameters):
 
         elif ch == "<":
 
-            # Reasonable template detection.
             prev = parameters[i - 1] if i > 0 else ""
             nxt = parameters[i + 1] if i + 1 < length else ""
 
@@ -418,38 +397,30 @@ def remove_default_value(param):
         ch = param[i]
 
         if ch == "(":
-
             paren_depth += 1
 
         elif ch == ")":
-
             if paren_depth > 0:
                 paren_depth -= 1
 
         elif ch == "[":
-
             bracket_depth += 1
 
         elif ch == "]":
-
             if bracket_depth > 0:
                 bracket_depth -= 1
 
         elif ch == "{":
-
             brace_depth += 1
 
         elif ch == "}":
-
             if brace_depth > 0:
                 brace_depth -= 1
 
         elif ch == "<":
-
             angle_depth += 1
 
         elif ch == ">":
-
             if angle_depth > 0:
                 angle_depth -= 1
 
@@ -484,10 +455,6 @@ def remove_parameter_name(param):
     if param == "...":
         return "..."
 
-    # -----------------------------------------------------
-    # Function pointer/reference
-    # -----------------------------------------------------
-
     param = re.sub(
         r'\(\s*[*&]\s*[A-Za-z_]\w*\s*\)',
         lambda m: (
@@ -497,10 +464,6 @@ def remove_parameter_name(param):
         ),
         param
     )
-
-    # -----------------------------------------------------
-    # Array parameter
-    # -----------------------------------------------------
 
     m = _RE_ARRAY_PARAM.match(param)
 
@@ -513,11 +476,6 @@ def remove_parameter_name(param):
         )
 
     else:
-
-        # -------------------------------------------------
-        # Remove final identifier if it looks like a
-        # parameter name.
-        # -------------------------------------------------
 
         m = _RE_FINAL_IDENTIFIER.match(param)
 
@@ -552,10 +510,6 @@ def remove_parameter_name(param):
             if name not in keywords:
 
                 param = before
-
-    # -----------------------------------------------------
-    # Normalize pointers/references
-    # -----------------------------------------------------
 
     param = re.sub(
         r'\s*\*\s*',
@@ -654,20 +608,16 @@ def find_function_parameter_range(
         ch = declaration[i]
 
         if ch == "[":
-
             bracket_depth += 1
 
         elif ch == "]":
-
             if bracket_depth > 0:
                 bracket_depth -= 1
 
         elif ch == "<":
-
             angle_depth += 1
 
         elif ch == ">":
-
             if angle_depth > 0:
                 angle_depth -= 1
 
@@ -681,11 +631,6 @@ def find_function_parameter_range(
                 candidates.append(i)
 
         i += 1
-
-    # -----------------------------------------------------
-    # The function parameter list is normally the last
-    # valid parenthesis pair in the declaration.
-    # -----------------------------------------------------
 
     for start in reversed(candidates):
 
@@ -727,27 +672,11 @@ def extract_name_from_prefix(prefix):
     if not prefix:
         return None
 
-    # =====================================================
-    # OPERATOR
-    #
-    # Examples:
-    #
-    # Value::operator bool
-    # Value::operator Hex
-    # Value::operator int
-    # Value::operator double
-    # Value::operator=
-    # operator==
-    # =====================================================
-
     operator_pos = prefix.rfind(
         "operator"
     )
 
     if operator_pos >= 0:
-
-        # Make sure "operator" is an identifier
-        # and not part of another word.
 
         before_char = (
             prefix[operator_pos - 1]
@@ -787,18 +716,6 @@ def extract_name_from_prefix(prefix):
                 :operator_pos
             ].strip()
 
-            # -------------------------------------------------
-            # Remove return type from scope.
-            #
-            # Example:
-            #
-            # bool Value::operator bool
-            #
-            # becomes:
-            #
-            # Value::
-            # -------------------------------------------------
-
             scope_match = re.search(
                 r'('
                 r'(?:[A-Za-z_]\w*::)+'
@@ -831,12 +748,6 @@ def extract_name_from_prefix(prefix):
                 + target
             ).strip()
 
-    # =====================================================
-    # Destructor
-    #
-    # Foo::~Foo
-    # =====================================================
-
     destructor = re.search(
         r'((?:[A-Za-z_]\w*::)*'
         r'~[A-Za-z_]\w*)$',
@@ -846,18 +757,6 @@ def extract_name_from_prefix(prefix):
     if destructor:
 
         return destructor.group(1)
-
-    # =====================================================
-    # Normal function
-    #
-    # We deliberately take the LAST qualified identifier.
-    #
-    # Example:
-    #
-    #   const std::vector<Value>& Property::GetValues
-    #
-    # -> Property::GetValues
-    # =====================================================
 
     matches = list(
         re.finditer(
@@ -946,36 +845,18 @@ def looks_like_function(
     if not prefix:
         return False
 
-    # -----------------------------------------------------
-    # Control structures
-    # -----------------------------------------------------
-
     if _RE_CONTROL.match(
         prefix
     ):
         return False
-
-    # -----------------------------------------------------
-    # return/throw/case
-    # -----------------------------------------------------
 
     if _RE_RETURN_THROW.search(
         prefix
     ):
         return False
 
-    # -----------------------------------------------------
-    # Lambda
-    # -----------------------------------------------------
-
     if declaration.startswith("["):
         return False
-
-    # -----------------------------------------------------
-    # Assignment expressions.
-    #
-    # operator= is explicitly allowed.
-    # -----------------------------------------------------
 
     if _RE_ASSIGNMENT.search(
         prefix
@@ -987,19 +868,11 @@ def looks_like_function(
 
             return False
 
-    # -----------------------------------------------------
-    # Macro invocation
-    # -----------------------------------------------------
-
     if _RE_UPPERCASE_MACRO.fullmatch(
         declaration
     ):
 
         return False
-
-    # -----------------------------------------------------
-    # Function name
-    # -----------------------------------------------------
 
     name = get_function_name(
         declaration
@@ -1008,28 +881,11 @@ def looks_like_function(
     if not name:
         return False
 
-    # -----------------------------------------------------
-    # Operators
-    # -----------------------------------------------------
-
     if "operator" in name:
-
         return True
-
-    # -----------------------------------------------------
-    # Qualified member function
-    # -----------------------------------------------------
 
     if "::" in name:
-
         return True
-
-    # -----------------------------------------------------
-    # Normal function.
-    #
-    # We need something before the final function name
-    # that looks like a return type.
-    # -----------------------------------------------------
 
     name_match = re.search(
         r'([A-Za-z_]\w*)$',
@@ -1040,10 +896,6 @@ def looks_like_function(
         return False
 
     function_name = name_match.group(1)
-
-    # -----------------------------------------------------
-    # Locate the function name at the end of prefix.
-    # -----------------------------------------------------
 
     function_match = re.search(
         r'([A-Za-z_]\w*)\s*$',
@@ -1058,20 +910,12 @@ def looks_like_function(
     ].strip()
 
     if not before_name:
-
-        # This can be a constructor/function with no
-        # explicit return type only if qualified.
         return "::" in name
-
-    # -----------------------------------------------------
-    # Reject obvious expressions.
-    # -----------------------------------------------------
 
     if re.search(
         r'[=+\-/!|^.]',
         before_name
     ):
-
         return False
 
     if "[" in before_name:
@@ -1081,10 +925,6 @@ def looks_like_function(
         return False
 
     return_type = before_name
-
-    # -----------------------------------------------------
-    # Remove pointer/reference qualifiers.
-    # -----------------------------------------------------
 
     test_type = re.sub(
         r'[\*&]',
@@ -1098,13 +938,6 @@ def looks_like_function(
 
     if not test_type:
         return False
-
-    # -----------------------------------------------------
-    # A return type should contain identifiers, scope,
-    # templates and common type qualifiers.
-    #
-    # This is intentionally permissive.
-    # -----------------------------------------------------
 
     if not re.fullmatch(
         r'(?:'
@@ -1183,7 +1016,6 @@ def normalize_function(
     )
 
     if after:
-
         result += " " + after
 
     result += ";"
@@ -1321,7 +1153,6 @@ def process_condition(
             )
 
             if cond:
-
                 level["taken"] = True
 
         return True
@@ -1351,7 +1182,6 @@ def process_condition(
     ):
 
         if len(stack) > 1:
-
             stack.pop()
 
         return True
@@ -1404,6 +1234,7 @@ def append_function(
     functions,
     filename,
     relative_path,
+    relative_to_cwd,
     normalized
 ):
 
@@ -1416,13 +1247,21 @@ def append_function(
 
     functions.append(
         {
+            # Just the filename.
             "file":
                 os.path.basename(
                     filename
                 ),
 
+            # Relative to the implementation
+            # project root.
             "path":
                 relative_path,
+
+            # Relative to the directory from which
+            # Python/crfn.py was launched.
+            "relative_path":
+                relative_to_cwd,
 
             "name":
                 name,
@@ -1440,6 +1279,7 @@ def append_function(
 def parse_cpp_file(
     filename,
     relative_path,
+    relative_to_cwd,
     defines,
     functions,
     eval_pp_expr,
@@ -1508,10 +1348,6 @@ def parse_cpp_file(
         if not line:
             continue
 
-        # =================================================
-        # Preprocessor
-        # =================================================
-
         if line.startswith("#"):
 
             process_condition(
@@ -1523,16 +1359,8 @@ def parse_cpp_file(
 
             continue
 
-        # =================================================
-        # Inactive branch
-        # =================================================
-
         if not stack[-1]["active"]:
             continue
-
-        # =================================================
-        # Function body
-        # =================================================
 
         if function_depth > 0:
 
@@ -1551,10 +1379,6 @@ def parse_cpp_file(
 
             continue
 
-        # =================================================
-        # Closing brace
-        # =================================================
-
         if line == "}":
 
             declaration = ""
@@ -1567,10 +1391,6 @@ def parse_cpp_file(
 
             continue
 
-        # =================================================
-        # Ignore obvious macros
-        # =================================================
-
         if _RE_UPPERCASE_MACRO.fullmatch(
             line
         ):
@@ -1579,36 +1399,17 @@ def parse_cpp_file(
 
             continue
 
-        # =================================================
-        # Accumulate declaration
-        # =================================================
-
         if declaration:
-
             declaration += " "
 
         declaration += line
 
-        # =================================================
-        # No opening brace
-        # =================================================
-
         if "{" not in line:
 
-            # -------------------------------------------------
-            # A declaration ending in ';' is not an
-            # implementation.
-            # -------------------------------------------------
-
             if ";" in line:
-
                 declaration = ""
 
             continue
-
-        # =================================================
-        # Opening brace
-        # =================================================
 
         brace_position = find_function_brace(
             declaration
@@ -1634,6 +1435,7 @@ def parse_cpp_file(
                         functions,
                         filename,
                         relative_path,
+                        relative_to_cwd,
                         normalized
                     )
 
@@ -1654,22 +1456,11 @@ def parse_cpp_file(
                 )
 
                 if function_depth < 0:
-
                     function_depth = 0
 
                 declaration = ""
 
                 continue
-
-        # =================================================
-        # Non-function brace
-        #
-        # class
-        # struct
-        # namespace
-        # enum
-        # initializer
-        # =================================================
 
         opens = declaration.count(
             "{"
@@ -1700,7 +1491,6 @@ def parse_implementations(
 ):
 
     if defines is None:
-
         defines = {}
 
     if eval_pp_expr is None:
@@ -1712,6 +1502,15 @@ def parse_implementations(
     project_root = os.path.abspath(
         directory
     )
+
+    # -----------------------------------------------------
+    # Directory from which Python was launched.
+    #
+    # This is intentionally os.getcwd(), not the location
+    # of this Python module.
+    # -----------------------------------------------------
+
+    execution_root = os.getcwd()
 
     functions = []
 
@@ -1768,9 +1567,24 @@ def parse_implementations(
                 filename
             )
 
+            # -------------------------------------------------
+            # Relative to the implementation project root.
+            # Existing "path" behavior is preserved.
+            # -------------------------------------------------
+
             relative_path = os.path.relpath(
                 filename,
                 project_root
+            )
+
+            # -------------------------------------------------
+            # Relative to the directory from which crfn.py
+            # was executed.
+            # -------------------------------------------------
+
+            relative_to_cwd = os.path.relpath(
+                filename,
+                execution_root
             )
 
             if verbose:
@@ -1784,6 +1598,7 @@ def parse_implementations(
             parse_cpp_file(
                 filename,
                 relative_path,
+                relative_to_cwd,
                 defines,
                 functions,
                 eval_pp_expr,
@@ -1807,5 +1622,6 @@ def print_implementations(
             f"{item['name']:35} "
             f"{item['file']:25} "
             f"{item['path']:45} "
+            f"{item['relative_path']:60} "
             f"{item['declaration']}"
         )

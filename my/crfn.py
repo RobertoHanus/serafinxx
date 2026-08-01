@@ -4,7 +4,7 @@
 import os
 
 from preprocessor import parse_preprocessor, eval_pp_expr
-from implementations_fast import (
+from implementations import (
     parse_implementations,
     print_implementations
 )
@@ -269,7 +269,7 @@ def main():
 
     for file in required_files:
         defines, prototypes = parse_preprocessor(
-            content + file,
+            file,
             defines=defines,
             prototypes=prototypes,
             include_paths=includes
@@ -286,7 +286,7 @@ def main():
         with open(required_libs_txt, 'w') as file_required_libs_txt:
 
             for r in required_files:
-                file_required_libs_txt.write(r + "\n")
+                file_required_libs_txt.write("./" +r + "\n")
     except Exception as e:
 
         print(
